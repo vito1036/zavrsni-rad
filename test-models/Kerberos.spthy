@@ -9,6 +9,11 @@ rule SetupT:
     -->
     [ !SymKey($A, $T, ~kA)]
 
+rule Reveal_ltk:
+    [ !SymKey(A, T, kA) ]
+    --[ LtkReveal(A) ]->
+    [ Out(kA) ]
+
 rule A1:
     [ Fr(~NA) ]
     -->
@@ -40,10 +45,23 @@ rule B1:
     []
 
 
+lemma Client_session_key_secrecy:
+    "not(
+        Ex A B k #i #j.
+          SessKeyA(A, B, k) @ #i
+        & K(k) @ #j
+        & not(Ex #r. LtkReveal(A) @ r)
+      )
+    "
+  
 
-lemma mutual_auth:
-    "All A B k #t.
-        SessKeyA(A, B, k) @ #t ==> (Ex #u. SessKeyB(A, B, k) @ #u)"
-      
 
+lemma auth:
+    "All A B k #t. SessKeyA(A, B, k) @ #t
+        ==>
+        ( (Ex #u. SessKeyB(A, B, k) @ u)
+        | (Ex #r. LtkReveal(A) @ #r & r < t)
+//        | (Ex #p. LtkReveal(B) @ p & p < t) 
+        ) "
+    
 end
