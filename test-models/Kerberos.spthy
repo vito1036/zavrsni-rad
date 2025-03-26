@@ -1,0 +1,49 @@
+theory Kerberos
+
+begin
+
+builtins: symmetric-encryption
+
+rule SetupT:
+    [ Fr(~kA) ]
+    -->
+    [ !SymKey($A, $T, ~kA)]
+
+rule A1:
+    [ Fr(~NA) ]
+    -->
+    [ A1_state($A, $B, ~NA),
+      Out(<$A, $B, ~NA>) ]
+
+rule T1:
+    [ !SymKey($A, $T, kA),
+      !SymKey($B, $T, kB),
+      In(<$A, $B, $NA>),
+      Fr(~k),
+      Fr(~L) ]
+    -->
+    [ Out(< senc(<~k, $A, ~L>, kB), senc(<~k, $NA, ~L, $B>, kA) >) ]
+
+rule A2:
+    [ A1_state($A, $B, NA),
+      !SymKey($A, $T, kA),
+      In(<$ticketB, senc(<k, NA, ~L, $B>, kA)>)]
+      --[ SessKeyA($A, $B, k) ]->
+      [
+        Out(< $ticketB, senc($A, k) >)
+      ]
+
+rule B1:
+    [ !SymKey($B, $T, kB),
+      In(<senc(<k, $A, L>, kB), senc($A, k)>)]
+    --[SessKeyB($A, $B, k)]->
+    []
+
+
+
+lemma mutual_auth:
+    "All A B k #t.
+        SessKeyA(A, B, k) @ #t ==> (Ex #u. SessKeyB(A, B, k) @ #u)"
+      
+
+end

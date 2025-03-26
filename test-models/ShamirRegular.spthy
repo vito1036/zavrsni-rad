@@ -1,0 +1,55 @@
+theory ShamirRegular
+begin
+
+builtins: diffie-hellman
+
+/*
+ *  Koraci protokola:
+ *  1) A -> B: {K ^ a}
+ *  2) A <- B: {K ^ (a * b)}
+ *  3) A -> B: {K ^ (a * b * (a^-1))}
+*/
+
+
+rule A1:
+  [ Fr(~k),
+    Fr(~a) ]
+-->
+  [A1(~k, ~a),
+   Out(~k ^ ~a) ]
+
+rule A2:
+  [ A1(k, a),
+    In(M2) ]
+  --[ SessKeyA(k) ]->
+  [ Out(M2 ^ inv(a)) ]
+
+rule B1:
+  [ Fr(~b),
+    In(M1) ]
+  -->
+  [ B1(M1, ~b),
+    Out(M1 ^ ~b)]
+
+rule B2:
+  [ B1(M1, b),
+    In(M3) ]
+  --[SessKeyB(M3 ^ inv(b))]->
+  [ ]
+
+
+rule RevealElem:
+  [ In(M1) ]
+  --[Reveal(M1)]->
+  []
+
+lemma reveal_k:
+  "All k #t1. SessKeyA(k) @ #t1 ==> not(Ex #t2. Reveal(k) @ #t2)"
+
+
+lemma no_auth:
+  "All k #t. SessKeyA(k) @ t ==> (Ex #u. SessKeyB(k) @ u)"
+
+
+end
+

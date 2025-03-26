@@ -1,0 +1,59 @@
+theory ShamirXor
+begin
+
+builtins: xor
+
+/*
+ *  Koraci protokola:
+ *  1) A -> B: {K xor a}
+ *  2) A <- B: {K xor a xor b}
+ *  3) A -> B: {K xor b}
+*/
+
+
+rule A1:
+  [ Fr(~k),
+    Fr(~a) ]
+-->
+  [A1(~k, ~a),
+   Out(~k XOR ~a) ]
+
+rule A2:
+  [ A1(k, a),
+    In(M2) ]
+  --[ SessKeyA(k) ]->
+  [ Out(M2 XOR a) ]
+
+rule B1:
+  [ Fr(~b),
+    In(M1) ]
+  -->
+  [ B1(M1, ~b),
+    Out(M1 XOR ~b)]
+
+rule B2:
+  [ B1(M1, b),
+    In(M3) ]
+  --[SessKeyB(M3 XOR b)]->
+  [ ]
+
+rule RevealXor:
+  [ In(M1), In(M2) ]
+  --[Reveal(M1 XOR M2)]->
+  [Out(M1 XOR M2)]
+
+rule RevealElem:
+  [ In(M1) ]
+  --[Reveal(M1)]->
+  []
+
+lemma reveal_k:
+  "All k #t1. SessKeyA(k) @ #t1 ==> not(Ex #t2. Reveal(k) @ #t2)"
+
+
+lemma no_auth:
+  "All k #t. SessKeyA(k) @ t ==> (Ex #u. SessKeyB(k) @ u)"
+
+
+end
+
